@@ -1,0 +1,47 @@
+import scala.xml.xml
+
+val hive_df = spark.sql("select * from default.customer_test")
+val projDF = hive_df.select("customerid","Demographics")
+case class CustomerDemo(customerid: int,TotalPurchaseYTD: string,DateFirstPurchase:string,Birthdate: string, Maritialstatus:string,Yeralyincome:String,Gender:string,TotalChildren:string,NumberChildrenAtHome:string,
+Education:string,Occupation:string,HomeOwnerFlag:string,NumberCarOwned:string,CommuteDistance:string) extends java.io.Serializable
+def createCustoDemo(custId:Int,demo:String):CustomerDemo = {
+val node = XML.loadString(demo))
+CustomerDemo(
+custId,
+(node \\\ "IndividualSurvey" \\ "TotalPurchaseYTD").text,
+(node \\\ "IndividualSurvey" \\ "DateFirstPurchase").text,
+(node \\\ "IndividualSurvey" \\ "BirthDate").text,
+(node \\\ "IndividualSurvey" \\ "MaritalStatus").text,
+(node \\\ "IndividualSurvey" \\ "YearlyIncome").text,
+(node \\\ "IndividualSurvey" \\ "Gender").text,
+(node \\\ "IndividualSurvey" \\ "TotalChildren").text,
+(node \\\ "IndividualSurvey" \\ "NumberChildrenAtHome").text,
+(node \\\ "IndividualSurvey" \\ "Education").text,
+(node \\\ "IndividualSurvey" \\ "Occupation").text,
+(node \\\ "IndividualSurvey" \\ "HomeOwnerFlag").text,
+(node \\\ "IndividualSurvey" \\ "NumberCarOwned").text,
+(node \\\ "IndividualSurvey" \\ "CommuteDistance").text) }
+
+
+
+
+--- Convert to array
+val projRDD = projDF.map(r => createCustDemo(r.get(o).toString.toInt,r.get(1),toString))
+
+
+-- To Create the parquet files from array data
+
+ProjRDD.toDF.write.format("parquet").mode("append").save("customer_demogrphics_xml_minned")
+
+
+Now the data are stored as a parquet file as customer_demographics_xml
+
+ -- Quit from the shell and check whether the file is present or not
+
+quit
+
+ls -ltr
+
+cd customer_demogrphics_xml_minned
+
+Now we can see the files,,,go back to the lab instruction page

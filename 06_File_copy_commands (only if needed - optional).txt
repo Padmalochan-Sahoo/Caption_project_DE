@@ -1,0 +1,28 @@
+
+## Please chanfge 
+## DOCKER COMMANDS TO COPY FILES FROM SPARK CONTAINER IN TO EC2 HOME DIRECTORY
+docker cp hdp_spark-master:/spark/customer_demographics_xml_mined/part-00003-39a67b42-6fe2-4060-bf7f-c3eed8fc3902-c000.snappy.parquet /home/ec2-user/
+docker cp hdp_spark-master:/spark/customer_demographics_xml_mined/part-00002-39a67b42-6fe2-4060-bf7f-c3eed8fc3902-c000.snappy.parquet /home/ec2-user/
+docker cp hdp_spark-master:/spark/customer_demographics_xml_mined/part-00001-39a67b42-6fe2-4060-bf7f-c3eed8fc3902-c000.snappy.parquet /home/ec2-user/
+docker cp hdp_spark-master:/spark/customer_demographics_xml_mined/part-00000-39a67b42-6fe2-4060-bf7f-c3eed8fc3902-c000.snappy.parquet /home/ec2-user/
+
+## DOCKER COMMANDS TO COPY FILES FROM EC2 HOME DIRECTORY TO HIVE
+
+docker cp /home/demouser/part-00003-39a67b42-6fe2-4060-bf7f-c3eed8fc3902-c000.snappy.parquet ra_hive-server:/opt
+docker cp /home/demouser/part-00002-39a67b42-6fe2-4060-bf7f-c3eed8fc3902-c000.snappy.parquet ra_hive-server:/opt
+docker cp /home/demouser/part-00001-39a67b42-6fe2-4060-bf7f-c3eed8fc3902-c000.snappy.parquet ra_hive-server:/opt
+docker cp /home/demouser/part-00000-39a67b42-6fe2-4060-bf7f-c3eed8fc3902-c000.snappy.parquet ra_hive-server:/opt
+
+Change to hive container: docker exec -i -t ra_hive-server bash
+## GRANTING FILE PERMISSIONS
+
+chmod 755 part-00003-39a67b42-6fe2-4060-bf7f-c3eed8fc3902-c000.snappy.parquet
+chmod 755 part-00002-39a67b42-6fe2-4060-bf7f-c3eed8fc3902-c000.snappy.parquet
+chmod 755 part-00001-39a67b42-6fe2-4060-bf7f-c3eed8fc3902-c000.snappy.parquet
+chmod 755 part-00003-39a67b42-6fe2-4060-bf7f-c3eed8fc3902-c000.snappy.parquet
+
+
+== Can ignore these
+docker cp hdp_spark-master:/spark/store_mined/part-00000-4bfab92b-d260-4f85-8319-192f7e6c5da1-c000.snappy.parquet /home/demouser/ 
+docker cp /home/demouser/part-00000-4bfab92b-d260-4f85-8319-192f7e6c5da1-c000.snappy.parquet ra_hive-server:/opt
+chmod 755 part-00000-4bfab92b-d260-4f85-8319-192f7e6c5da1-c000.snappy.parquet

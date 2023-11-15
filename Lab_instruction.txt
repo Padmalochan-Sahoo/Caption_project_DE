@@ -1,0 +1,173 @@
+ssh -i C:\Users\admin\Downloads\spark_key.pem azureuser@20.115.116.95
+ssh azureuser@20.124.84.160
+
+icacls "C:\Users\admin\spark_key.pem" /grant "admin:R"
+
+
+Cdelinux@2023
+
+scp -r Downloads/Installation_Execution\docker_exp azureuser@20.124.84.160:/home/azureuser/docker_exp
+
+Install docker and docker compose
+https://docs.privacera.com/latest/platform/pm-ig/install_docker_and_docker_compose_azure_ubuntu/
+
+
+
+
+-- Start docker containers
+got to the directory where docker_exp file is present
+docker-compose up OR docker compose up
+
+If permission issues - sudo chmod 666 /var/run/docker.sock
+
+then again run 
+
+docker-compose up
+
+sudo service docker stop
+
+
+Satisfy the dependesies-This is needed for a latter stage when we will process XML file.
+Need to store meta store dependent jar file in to the spark container.We will use the postgreSQL jar file.
+postgresql-42.3.1. We cannot copy from container to container,we will copy the postgreSQL jar file from local to azure vm.The jar file is available in C:\Users\admin\Downloads\Installation_Execution\Docker - Hive-Spark-Dependencies
+
+--Run in your local cmd,,1st go to the root directory then (C:\Users\admin\Downloads\Installation_Execution\Docker - Hive-Spark-Dependencies>)
+
+scp postgresql-42.3.1.jar azureuser@20.124.84.160:/home/azureuser/
+
+--Check whats inside spark container?
+Spark container is running in the background , so to access it
+
+docker exec -it hdp_spark-master bash 
+
+,,it will take you to spark conatiner, like this if we want to see any container we can use this spark command by changing the container name.
+Now exit from the spark container 
+
+--We have to copy the postgresql-42.3.1.jar file from our vm to Spark container and inside that there is is spark/jars/ directory.
+
+docker cp postgresql-42.3.1.jar hdp_spark-master:/spark/jars
+
+--Like the postgresql jar file we ahve to copy the hive.xml file from our local to the azure vm then from there to the hive container.
+
+connect your local cmd, then
+
+scp hive-site.xml azureuser@20.124.84.160:/home/azureuser/
+
+Now we have to copy the file from azure vm to spark container and inside that there is a conf directory
+
+docker cp hive-site.xml hdp_spark-master:/spark/conf
+
+--Note,if we want to copy a file from a docker container to our local ,then
+
+docker cp ra_hive-server:/opt/hive/config/hive-site.xml . --(Here . at the end represents the currient directory,from where you are running the command)
+
+
+To check both the files are in the desired location or not ,go to
+docker exec -it hdp_spark-master bash
+
+cd /spark/jars/ - to check the postgre.jar file
+ 
+cd /spark/conf/ - to check the hive-site.xml   
+                        
+                                      --- Depndecies has been setuped. ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+As per the project requirement we have to pick data from mysql table using sqoop and ingest those data into HDFS.
+So let's create a SQL tables and ingest some data there.To connect to sql
+
+docker exec -i -t ra_mysql bash	
+then to go to query prompt : mysql -u root -p
+then it will ask you password,in the xml file it is defined-example
+
+Now you are in sql query prompt .https://drive.google.com/file/d/19v6Wtl2btRRn63IaD_XYUjATjDNK4Jj_/view
+
+Once all the data get inserted into sql now we have to transfer the data into HDFS using SQOOP.
+As per the business requirement we don't need all the data to be load to HDFS so based on our requirement we will create some Views which will fetch certain rows,
+and those rows will be transferred to HDFS.Views are stored on the sql_views file.
+
+
+-- After creating the views , we will move the data in to HDFS layer.It is structured data so we will use Apache sqoop toll for transfer.
+
+
+-- Go to sqoop container
+docker exec -i -t ra_sqoop bash
+-Run the sqoop quries from 03_Sqoop-import.txt - - in this file everything is mentioned  (queries) to import the required data in to HDFS.
+
+---Now data is loaded in to HDFS layer, now we have to load the data into Hive tables.for that get into the hive container
+   docker exec -i -t ra_hive-server bash ,,then type hive.. Now we are in the hive query prompt.
+   Now load the rquired data using Load_Data_Hive.txt file 
+   Once data is loaded then we will use hive quries to analyze the questions.
+Refference Hive_analytics_query.txt
+
+                                                          --- XML Processing using SPARK -----
+
+
+--To operate on XML Data we will need we will need spark
+*we need that the spark and Hive dependency is taken care of.We have already done that previously 
+with Satisfy Dependecies section,those commands are available in Hive,spark dependencies.txt file.
+
+Now login in to the spark container : docker exec -i -t hdp_spark-master bash
+then cd /spark/
+then ./bin/spark-shell for Scala envoirnment
+
+cd /spark/
+./bin/pyspark for pyspark envoirnment
+
+-- go to spark-shell the executes the command available in spark_queries.txt file ,,, once that data processed copy those file location ,,, then copy those files from spark conatainer to vm then copy them from the vm to hive container
+
+--Commands for copying the file from spark container to vm
+
+docker cp hdp_sprk-master:/spark/customer_demographics_xml_mined/part-00003-39a67b42-6fe2-4060-bf7f-c3eed8fc3902-c000.snappy.parquet /home/azureuser/
+
+
+docker cp hdp_sprk-master:/spark/customer_demographics_xml_mined/part-00002-39a67b42-6fe2-4060-bf7f-c3eed8fc3902-c000.snappy.parquet /home/azureuser/
+
+
+docker cp hdp_sprk-master:/spark/customer_demographics_xml_mined/part-00001-39a67b42-6fe2-4060-bf7f-c3eed8fc3902-c000.snappy.parquet /home/azureuser/
+
+
+docker cp hdp_sprk-master:/spark/customer_demographics_xml_mined/part-00000-39a67b42-6fe2-4060-bf7f-c3eed8fc3902-c000.snappy.parquet /home/azureuser/
+
+
+--Commands to move from VM to hive container
+
+docker cp home/demouser/part-00000-39a67b42-6fe2-4060-bf7f-c3eed8fc3902-c000.snappy.parquet ra_hive-server:/opt
+
+
+docker cp home/demouser/part-00001-39a67b42-6fe2-4060-bf7f-c3eed8fc3902-c000.snappy.parquet ra_hive-server:/opt
+
+
+docker cp home/demouser/part-00002-39a67b42-6fe2-4060-bf7f-c3eed8fc3902-c000.snappy.parquet ra_hive-server:/opt
+
+
+docker cp home/demouser/part-00003-39a67b42-6fe2-4060-bf7f-c3eed8fc3902-c000.snappy.parquet ra_hive-server:/opt
+
+
+
+-- Then go to the hive container - docker exec -i -t ra_hive-server bash
+## Granting file permission
+
+chmod 755 part-00000-39a67b42-6fe2-4060-bf7f-c3eed8fc3902-c000.snappy.parquet
+
+chmod 755 part-00001-39a67b42-6fe2-4060-bf7f-c3eed8fc3902-c000.snappy.parquet
+
+chmod 755 part-00002-39a67b42-6fe2-4060-bf7f-c3eed8fc3902-c000.snappy.parquet
+
+chmod 755 part-00003-39a67b42-6fe2-4060-bf7f-c3eed8fc3902-c000.snappy.parquet
+
+
+
+---After this go to customer_demographics_creation.hql file to load data from parquet file  hive table.
+we can carry on analytics by using quries from Hive_analytics_quries.txt(process the xml files)

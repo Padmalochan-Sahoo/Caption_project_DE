@@ -1,0 +1,32 @@
+create table customer_demographics (
+CustomerID int,
+TotalPurchaseYTD STRING,
+DateFirstPurchase string,
+BirthDate string,
+MaritialStatus string,
+Gender string,TotalChildren string,NumberChildrenAtHome string,
+Education string,Occupation string,HomeOwnerFlag string,NumberCarsOwned string,
+ComuteDistance string) stored as parquet;
+
+/* these are the file name i.e present inside the spark container 
+part-00000-39a67b42-6fe2-4060-bf7f-c3eed8fc3902-c000.snappy.parquet
+part-00001-39a67b42-6fe2-4060-bf7f-c3eed8fc3902-c000.snappy.parquet
+part-00002-39a67b42-6fe2-4060-bf7f-c3eed8fc3902-c000.snappy.parquet
+part-00003-39a67b42-6fe2-4060-bf7f-c3eed8fc3902-c000.snappy.parquet
+*/
+
+
+load data local inpath 'file name in hive container' into table customer_demographics;
+load data local inpath 'file name in hive container' into table customer_demographics;
+load data local inpath 'file name in hive container' into table customer_demographics;
+load data local inpath 'file name in hive container' into table customer_demographics;
+
+
+select * from customer_demographics;(hive query)
+
+
+--- Now data is loaded into the hive table,,let's do some  transformation on the customer_demographics table
+
+insert overwrite table customer_demo
+select customerid,cast(totalpurchaseytd as decimal(15,2)),to_date(substr(datefirstpurchase,1,10)),to_date(substr(birthdate,1,10),maritalstatus,yearlyincome,gender,cast(totalchildren as int),
+cast(numberchildrenathome as int),education,occupation,homeownerflag,cast(numbercarsowned as int),commutedistance from customer_demographics;
